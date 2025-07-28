@@ -1,0 +1,75 @@
+***********;
+* Amulya Bollapragada
+* 2/23/25
+* Week 8 Videos: Row Manipulations
+************;
+
+
+**Below is some code that we need from the last video;
+
+LIBNAME NCSU '/home/u64121671/myLib';
+
+proc import datafile = '/home/u64121671/my_shared_file_links/u424592/02-ManipulatingData/cafe.xlsx'
+	dbms = xlsx
+	out = NCSU.cafedata;
+	getnames= yes;
+run;
+
+data cafe;
+	set NCSU.cafedata;
+	Year = Year(date);
+	Month = Month(date);
+	if month <= 2 then season = "Winter";
+run;
+
+
+******************;
+
+*Filtering rows;
+
+*We are deleting the row if it is missing a season. 
+The only season we added is winter, so anything that is not winter should be deleted;
+
+data cafe;
+	set cafe;
+	if missing(season) then delete;
+run;
+
+**More data from previous videos that we need;
+
+proc import datafile= '/home/u64121671/my_shared_file_links/u424592/02-ManipulatingData/winequality-full.csv'
+	dbms = csv 
+	replace
+	out = NCSU.myWine;
+	getnames= yes;
+run;
+
+DATA NCSU.formattedwine;
+	set NCSU.myWine (RENAME = ('fixed acidity'n = fixed_acidity 'volatile acidity'n = volatile_acidity 
+	'citric acid'n = citric_acid 'residual sugar'n = residual_sugar 
+	'free sulfur dioxide'n = free_sulfur_dioxide 'total sulfur dioxide'n = total_sulfur_dioxide)
+			drop = type Ph);
+	label fixed_acidity = 'fixed acidity' volatile_acidity = 'Volatile Acidity' 
+	citric_acid = 'Citric Acid' residual_sugar = 'Residual Sugar' 
+	free_sulfur_dioxide = 'Free Sulfur Dioxide' total_sulfur_dioxide = "Total Sulfur Dioxide";
+run;
+
+*The following code find the mean, std, and median on the rows where quality is > 6;
+
+proc means data = ncsu.formattedwine mean std median;
+	where quality > 6;
+run;
+
+*The following code sorts the data first by descending quality and then by alcohol within the quality groups;
+
+proc sort data = NCSU.formattedwine;
+	by descending quality alcohol;
+run;
+
+*The following code prints the rows where quality is > 6 with labels;
+
+proc print data = NCSU.formattedwine LABEL;
+	where quality > 6;
+run;
+
+	
